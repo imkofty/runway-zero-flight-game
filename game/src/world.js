@@ -35,7 +35,9 @@ export function onRunway(x) {
   return x >= CONFIG.RUNWAY_X0 && x <= CONFIG.RUNWAY_X1;
 }
 
-// Precomputed stars (seeded, screen space).
+// Precomputed stars (seeded, screen space). Range extends past the
+// viewport so zoomed-out shots (readability, 0.8x) still have stars
+// at the frame edges.
 const STARS = [];
 {
   let s = 1234567;
@@ -44,7 +46,7 @@ const STARS = [];
     return s / 2147483647;
   };
   for (let i = 0; i < 90; i++) {
-    STARS.push({ x: rnd() * 1280, y: rnd() * 300, r: 0.6 + rnd() * 1.4, a: 0.25 + rnd() * 0.55 });
+    STARS.push({ x: -200 + rnd() * 1680, y: -90 + rnd() * 420, r: 0.6 + rnd() * 1.4, a: 0.25 + rnd() * 0.55 });
   }
 }
 
@@ -55,7 +57,9 @@ function drawSky(ctx, camX, t) {
   g.addColorStop(0.72, P.skyLow);
   g.addColorStop(1, '#5a2f56');
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 1280, 720);
+  // Overscan: the fill extends past the viewport so zoomed-out shots
+  // (readability, 0.8x) have sky at the frame edges, not bare canvas.
+  ctx.fillRect(-200, -200, 1680, 1120);
 
   for (const s of STARS) {
     ctx.globalAlpha = s.a * (0.7 + 0.3 * Math.sin(t * 1.3 + s.x));
@@ -66,9 +70,10 @@ function drawSky(ctx, camX, t) {
 
   // Low amber sun, fixed ahead on the horizon (screen space, drifts slowly).
   // Raised and brightened (polish v2): the old low sun left the lower
-  // half of the hero frame near-unreadable in thumbnails.
+  // half of the hero frame near-unreadable in thumbnails. Centred behind
+  // the runway mesa so the disc sits on the mesa line in the hero frame.
   const sunX = 980 - ((camX * 0.02) % 120);
-  const sunY = 440;
+  const sunY = 400;
   const glow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 300);
   glow.addColorStop(0, 'rgba(255, 154, 60, 0.65)');
   glow.addColorStop(0.4, 'rgba(255, 122, 26, 0.22)');
@@ -86,19 +91,20 @@ function drawSky(ctx, camX, t) {
 }
 
 // One distant mesa silhouette layer. depth 0..1 shifts its parallax.
+// Drawn overscanned (-200..1480, down to 920) for zoomed-out shots.
 function mesaLayer(ctx, camX, depth, color, baseY, amp) {
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(0, 720);
+  ctx.moveTo(-200, 920);
   const off = camX * depth;
-  for (let sx = 0; sx <= 1280; sx += 16) {
+  for (let sx = -200; sx <= 1480; sx += 16) {
     const wx = sx + off;
     const y = baseY
       + Math.sin(wx * 0.004 + depth * 9) * amp
       + Math.sin(wx * 0.0016 + depth * 40) * amp * 1.6;
     ctx.lineTo(sx, y);
   }
-  ctx.lineTo(1280, 720);
+  ctx.lineTo(1480, 920);
   ctx.closePath();
   ctx.fill();
 }
@@ -118,28 +124,30 @@ export function drawWorld(ctx, cam, t) {
     ctx.fillStyle = '#2e2352';
     ctx.beginPath();
     ctx.moveTo(volX - 170, 545);
-    ctx.lineTo(volX, 250);
+    ctx.lineTo(volX, 300);
     ctx.lineTo(volX + 170, 545);
     ctx.closePath();
     ctx.fill();
     // Glowing crater + embers at the peak.
-    const crater = ctx.createRadialGradient(volX, 252, 2, volX, 252, 30);
+    const crater = ctx.createRadialGradient(volX, 302, 2, volX, 302, 30);
     crater.addColorStop(0, 'rgba(255, 154, 60, 0.9)');
     crater.addColorStop(1, 'rgba(255, 154, 60, 0)');
     ctx.fillStyle = crater;
-    ctx.fillRect(volX - 30, 222, 60, 60);
+    ctx.fillRect(volX - 30, 272, 60, 60);
     ctx.fillStyle = P.hudAmber;
     ctx.beginPath();
-    ctx.arc(volX - 8, 250, 3, 0, Math.PI * 2);
-    ctx.arc(volX + 10, 256, 2.5, 0, Math.PI * 2);
+    ctx.arc(volX - 8, 300, 3, 0, Math.PI * 2);
+    ctx.arc(volX + 10, 306, 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // No clouds: the sky, stars and sun carry the dusk on their own.
 
   // Near terrain: filled path of groundAt, sampled in screen space.
+  // Overscanned for zoomed-out shots (visible range at 0.8x is -160..1440,
+  // -90..810).
   const top = [];
-  for (let sx = -20; sx <= 1300; sx += 10) {
+  for (let sx = -200; sx <= 1480; sx += 10) {
     const wx = sx + camX;
     top.push([sx, groundAt(wx) - camY]);
   }
@@ -150,8 +158,8 @@ export function drawWorld(ctx, cam, t) {
   ctx.beginPath();
   ctx.moveTo(top[0][0], top[0][1]);
   for (const [sx, sy] of top) ctx.lineTo(sx, sy);
-  ctx.lineTo(1300, 720);
-  ctx.lineTo(-20, 720);
+  ctx.lineTo(1480, 920);
+  ctx.lineTo(-200, 920);
   ctx.closePath();
   ctx.fill();
 
@@ -170,10 +178,10 @@ export function drawWorld(ctx, cam, t) {
   ctx.globalAlpha = 0.5;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  for (let sx = -20; sx <= 1300; sx += 10) {
+  for (let sx = -200; sx <= 1480; sx += 10) {
     const wx = sx + camX;
     const ry = floorY(wx) + 26 - camY;
-    if (sx === -20) ctx.moveTo(sx, ry);
+    if (sx === -200) ctx.moveTo(sx, ry);
     else ctx.lineTo(sx, ry);
   }
   ctx.stroke();
@@ -193,7 +201,7 @@ export function drawWorld(ctx, cam, t) {
   for (const hs of HOUSES) {
     const gy = floorY(hs.x + hs.w / 2) - camY;
     const hx = hs.x - camX;
-    if (hx < -60 || hx > 1340) continue;
+    if (hx < -200 || hx > 1480) continue;
     ctx.fillStyle = '#1a1230';
     ctx.fillRect(hx, gy - hs.h, hs.w, hs.h);
     // Lit windows.
@@ -212,22 +220,23 @@ function drawGoalBeacon(ctx, cam, t) {
   const x = CONFIG.RUNWAY_CENTER - cam.x;
   const y = CONFIG.RUNWAY_Y - cam.y;
   if (x < -40 || x > 1320) return;
-  // Light beam above the runway centre, gently pulsing.
-  const pulse = 0.10 + 0.05 * Math.sin(t * 2.2);
-  const beam = ctx.createLinearGradient(0, y - 260, 0, y);
+  // Light beam above the runway centre, gently pulsing. Short enough
+  // that the diamond reads as attached to the runway, not floating.
+  const pulse = 0.16 + 0.06 * Math.sin(t * 2.2);
+  const beam = ctx.createLinearGradient(0, y - 200, 0, y);
   beam.addColorStop(0, 'rgba(255, 179, 71, 0)');
   beam.addColorStop(1, `rgba(255, 179, 71, ${pulse})`);
   ctx.fillStyle = beam;
-  ctx.fillRect(x - 8, y - 260, 16, 260);
+  ctx.fillRect(x - 10, y - 200, 20, 200);
   // Glowing diamond marker at the top of the beam.
-  const glow = ctx.createRadialGradient(x, y - 272, 2, x, y - 272, 26);
+  const glow = ctx.createRadialGradient(x, y - 212, 2, x, y - 212, 26);
   glow.addColorStop(0, 'rgba(255, 179, 71, 0.85)');
   glow.addColorStop(1, 'rgba(255, 179, 71, 0)');
   ctx.fillStyle = glow;
-  ctx.fillRect(x - 26, y - 298, 52, 52);
+  ctx.fillRect(x - 26, y - 238, 52, 52);
   ctx.fillStyle = P.hudAmber;
   ctx.save();
-  ctx.translate(x, y - 272);
+  ctx.translate(x, y - 212);
   ctx.rotate(Math.PI / 4);
   ctx.fillRect(-9, -9, 18, 18);
   ctx.restore();
