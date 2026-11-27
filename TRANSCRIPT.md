@@ -42,3 +42,45 @@ besar 20–25%, warna kontras tunggal, judul 3–4 kata).
 - SERAH-TERIMA: bundle + check + submit dilakukan parent (top-level agent)
   karena usage rows subagent baru ada sesudah run selesai dan bundle harus
   membawa sesi parent. Detail + perintah lengkap di laporan akhir.
+
+## Polish v2 — 27 Nov 2026 (pagi, sesudah probe submit 08:10)
+Dasar: audit Feed (feed-audit.md) — skor kita 74/100, peringkat 12–13
+dari 23 sampel; rekonsiliasi gerbang (Wonder + ChatGPT): poles terbatas,
+maksimal 3 perbaikan. Builder pertama mati daemon restart (nol progres);
+builder pengganti mulai dari nol 08:41.
+- 08:47 — Fix 1 (needle): definisi lama mustahil — gear DI BAWAH top
+  pilar = zona crash di tick yang sama, jadi +150 tidak pernah selamat
+  sampai landing. Definisi baru: gear 4–90 px DI ATAS top pilar (>4 px
+  membersihkan margin crash 2 px). Tes landing 16/16 (11 lama + 5 baru).
+- 08:56 — Fix 2 (hero): kamera hero 2840→3100 — runway utuh + teks ZERO
+  + windsock masuk frame; HUD tambah baris objektif "LAND ON ZERO —
+  PERFECT +1000 • SAFE +500"; beacon tujuan: beam amber + diamond
+  bercahaya di atas tengah runway.
+- 08:57 — Fix 3 (terang + landmark): matahari naik (470→400) + besar,
+  gradien terrain + palet mesa diterangkan, rim light penuh; landmark:
+  gunung berapi (parallax 0.05) di belakang runway + kampung berlampu
+  di lantai canyon (x 3500–3720); readability di-staging ulang zoom 0.8
+  (pesawat + pilar 2 + runway ZERO satu frame); preset reward tidak lagi
+  memalsukan garis needle (Perfect + time bonus saja, 1380).
+- 09:14 — Perbaikan visual putaran 2 sesudah baca shot baru: overscan
+  gambar dunia (sky/mesa/terrain/bintang sampai -200..1480) — shot
+  readability 0.8x tadinya menampilkan bilah canvas kosong di tepi;
+  matahari 440→400 (cakram di garis mesa); beam beacon dipendekkan +
+  diterangkan; puncak gunung 250→300 (pisah dari diamond beacon).
+- Verifikasi real-play (real-play.mjs, autopilot keyboard via
+  window.RUNWAY_ZERO, tanpa preset): landing SAFE 1500 — KEDUA needle
+  didapat sungguhan + time bonus 700 (run final: percobaan 1 MISS 1010,
+  percobaan 2 SAFE 1500, percobaan 3 SAFE 1500; run sebelumnya juga
+  SAFE 1510 — autopilot tidak 100% stabil, gamenya sendiri baik-baik
+  saja); crash pilar MISS; stall (throttle 0) → tenggelam + crash;
+  0 console error. 3-reward.jpg diambil dari permainan nyata ini
+  (bukan preset) — urutan wajib: shots.mjs dulu, real-play.mjs sesudah,
+  karena shots.mjs menimpa 3-reward.jpg dengan preset.
+- CATATAN JUJUR: timeout 90 dtk tidak terjangkau dalam permainan nyata
+  — waktu lintas dunia maks ~37 dtk (kecepatan min 120 px/s), pesawat
+  menabrak dinding ujung dunia lalu crash-sink sebelum timer habis.
+  Jalur kode timeout ada, tapi levelnya lebih pendek dari timernya.
+  Bukan redesign — dicatat di sini, bukan disembunyikan.
+- SERAH-TERIMA: sama seperti probe — bundle + check + submit v2
+  dilakukan parent (kit level 58), hanya kalau re-skor screenshot
+  baru ≥75 dan tanpa regresi gameplay.
