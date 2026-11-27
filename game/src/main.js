@@ -32,6 +32,10 @@ const state = {
   t: 0,
 };
 
+// Debug/QA handle: the real-play autopilot and smoke tests read the live
+// state here. Read-only handle, no gameplay effect.
+window.RUNWAY_ZERO = state;
+
 function reset() {
   state.plane = newPlane();
   state.camera = { x: 0, y: 120, zoom: 1 };

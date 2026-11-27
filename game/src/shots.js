@@ -14,9 +14,10 @@ export function applyShot(state, name) {
   state.shot = name;
 
   if (name === 'hero') {
-    // Mid-flight over the canyon: plane big, runway + arch ahead, HUD full.
+    // Mid-flight over the canyon: plane big, whole runway + goal beacon
+    // ahead, objective line live, HUD full.
     pl.x = 3400;
-    pl.y = 340;
+    pl.y = 330;
     pl.vx = 250;
     pl.vy = -18;
     pl.pitch = -0.12;
@@ -25,8 +26,8 @@ export function applyShot(state, name) {
     state.phase = 'flying';
     state.timeLeft = 52;
     state.score = 150;
-    state.camera.x = 2840;
-    state.camera.y = 120;
+    state.camera.x = 3100; // runway 3850-4150 lands at screen 750-1050: whole
+    state.camera.y = 110; // "ZERO" text, beacon and windsock fully in frame
     state.camera.zoom = 1;
     state.nearRunway = true;
     return true;
@@ -55,6 +56,9 @@ export function applyShot(state, name) {
 
   if (name === 'reward') {
     // Just touched down on ZERO: PERFECT banner, dust, score popup.
+    // Honest restaging of an achievable outcome: Perfect + time bonus
+    // only. The needle line is NOT faked here — it appears only when a
+    // real playthrough earns it (see real-play capture for 3-reward.jpg).
     pl.x = CONFIG.RUNWAY_CENTER;
     pl.y = CONFIG.RUNWAY_Y - 26;
     pl.vx = 0;
@@ -73,10 +77,9 @@ export function applyShot(state, name) {
       line: 'Touchdown in the window — speed, sink and centre all green.',
       breakdown: [
         'Perfect landing  +1000',
-        'Threaded the needle  +150',
         'Time bonus (38 s left)  +380',
       ],
-      score: 1530,
+      score: 1380,
     };
     state.dust = [];
     for (let i = 0; i < 26; i++) {
@@ -91,9 +94,10 @@ export function applyShot(state, name) {
   }
 
   if (name === 'readability') {
-    // Close chase view: big plane, instruments and HUD readable at a glance.
-    pl.x = 2050;
-    pl.y = 300;
+    // Final approach at zoom 0.8: plane centre, pillar 2 at the left edge
+    // and runway ZERO at the right edge in one frame, instruments readable.
+    pl.x = 3350;
+    pl.y = 330;
     pl.vx = 210;
     pl.vy = -8;
     pl.pitch = -0.06;
@@ -102,10 +106,10 @@ export function applyShot(state, name) {
     state.phase = 'flying';
     state.timeLeft = 63;
     state.score = 150;
-    state.camera.x = 1410; // plane dead-centre on screen, tail clear of the HUD
-    state.camera.y = 150;
-    state.camera.zoom = 1.28;
-    state.nearRunway = false;
+    state.camera.x = 2710; // visible world 2550-4150: pillar 2 + runway
+    state.camera.y = 110;
+    state.camera.zoom = 0.8;
+    state.nearRunway = true;
     return true;
   }
 

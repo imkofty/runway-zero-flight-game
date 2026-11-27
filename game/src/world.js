@@ -65,21 +65,23 @@ function drawSky(ctx, camX, t) {
   ctx.globalAlpha = 1;
 
   // Low amber sun, fixed ahead on the horizon (screen space, drifts slowly).
+  // Raised and brightened (polish v2): the old low sun left the lower
+  // half of the hero frame near-unreadable in thumbnails.
   const sunX = 980 - ((camX * 0.02) % 120);
-  const sunY = 470;
-  const glow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 260);
-  glow.addColorStop(0, 'rgba(255, 154, 60, 0.55)');
-  glow.addColorStop(0.4, 'rgba(255, 122, 26, 0.18)');
+  const sunY = 440;
+  const glow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 300);
+  glow.addColorStop(0, 'rgba(255, 154, 60, 0.65)');
+  glow.addColorStop(0.4, 'rgba(255, 122, 26, 0.22)');
   glow.addColorStop(1, 'rgba(255, 122, 26, 0)');
   ctx.fillStyle = glow;
-  ctx.fillRect(sunX - 260, sunY - 260, 520, 520);
+  ctx.fillRect(sunX - 300, sunY - 300, 600, 600);
   ctx.fillStyle = P.sunCore;
   ctx.beginPath();
-  ctx.arc(sunX, sunY, 58, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, 66, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = 'rgba(255, 214, 140, 0.85)';
   ctx.beginPath();
-  ctx.arc(sunX, sunY, 44, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, 52, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -108,6 +110,31 @@ export function drawWorld(ctx, cam, t) {
   mesaLayer(ctx, camX, 0.12, P.farMesa, 470, 26);
   mesaLayer(ctx, camX, 0.3, P.midRock, 540, 34);
 
+  // Distant volcano: the canyon's landmark, slow parallax (0.05). The
+  // near terrain covers its base, so only the cone above the mesa line
+  // shows — looming behind the runway in the hero frame.
+  const volX = 1060 - camX * 0.05;
+  if (volX > -200 && volX < 1480) {
+    ctx.fillStyle = '#2e2352';
+    ctx.beginPath();
+    ctx.moveTo(volX - 170, 545);
+    ctx.lineTo(volX, 250);
+    ctx.lineTo(volX + 170, 545);
+    ctx.closePath();
+    ctx.fill();
+    // Glowing crater + embers at the peak.
+    const crater = ctx.createRadialGradient(volX, 252, 2, volX, 252, 30);
+    crater.addColorStop(0, 'rgba(255, 154, 60, 0.9)');
+    crater.addColorStop(1, 'rgba(255, 154, 60, 0)');
+    ctx.fillStyle = crater;
+    ctx.fillRect(volX - 30, 222, 60, 60);
+    ctx.fillStyle = P.hudAmber;
+    ctx.beginPath();
+    ctx.arc(volX - 8, 250, 3, 0, Math.PI * 2);
+    ctx.arc(volX + 10, 256, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // No clouds: the sky, stars and sun carry the dusk on their own.
 
   // Near terrain: filled path of groundAt, sampled in screen space.
@@ -117,8 +144,8 @@ export function drawWorld(ctx, cam, t) {
     top.push([sx, groundAt(wx) - camY]);
   }
   const grad = ctx.createLinearGradient(0, 300, 0, 720);
-  grad.addColorStop(0, '#241a3e');
-  grad.addColorStop(1, P.nearRock);
+  grad.addColorStop(0, '#2e2350');
+  grad.addColorStop(1, '#201638');
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.moveTo(top[0][0], top[0][1]);
@@ -130,8 +157,8 @@ export function drawWorld(ctx, cam, t) {
 
   // Amber rim light along the terrain's top edge.
   ctx.strokeStyle = P.rockRim;
-  ctx.globalAlpha = 0.85;
-  ctx.lineWidth = 3;
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(top[0][0], top[0][1]);
   for (const [sx, sy] of top) ctx.lineTo(sx, sy);
@@ -152,7 +179,58 @@ export function drawWorld(ctx, cam, t) {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
+  // Riverside village: lit windows on the canyon floor (world x 3500-3720).
+  // Sits in the lower frame of the hero shot, where the old frame was
+  // near-black.
+  const HOUSES = [
+    { x: 3510, w: 30, h: 16 },
+    { x: 3552, w: 24, h: 12 },
+    { x: 3588, w: 36, h: 18 },
+    { x: 3636, w: 26, h: 13 },
+    { x: 3672, w: 32, h: 17 },
+    { x: 3714, w: 24, h: 12 },
+  ];
+  for (const hs of HOUSES) {
+    const gy = floorY(hs.x + hs.w / 2) - camY;
+    const hx = hs.x - camX;
+    if (hx < -60 || hx > 1340) continue;
+    ctx.fillStyle = '#1a1230';
+    ctx.fillRect(hx, gy - hs.h, hs.w, hs.h);
+    // Lit windows.
+    ctx.fillStyle = '#ffb347';
+    ctx.fillRect(hx + 5, gy - hs.h + 4, 4, 5);
+    ctx.fillRect(hx + hs.w - 9, gy - hs.h + 4, 4, 5);
+  }
+
   drawRunway(ctx, cam);
+  drawGoalBeacon(ctx, cam, t);
+}
+
+// Glowing goal beacon above the runway centre: a light beam plus a
+// diamond marker, so the target reads from anywhere in the canyon.
+function drawGoalBeacon(ctx, cam, t) {
+  const x = CONFIG.RUNWAY_CENTER - cam.x;
+  const y = CONFIG.RUNWAY_Y - cam.y;
+  if (x < -40 || x > 1320) return;
+  // Light beam above the runway centre, gently pulsing.
+  const pulse = 0.10 + 0.05 * Math.sin(t * 2.2);
+  const beam = ctx.createLinearGradient(0, y - 260, 0, y);
+  beam.addColorStop(0, 'rgba(255, 179, 71, 0)');
+  beam.addColorStop(1, `rgba(255, 179, 71, ${pulse})`);
+  ctx.fillStyle = beam;
+  ctx.fillRect(x - 8, y - 260, 16, 260);
+  // Glowing diamond marker at the top of the beam.
+  const glow = ctx.createRadialGradient(x, y - 272, 2, x, y - 272, 26);
+  glow.addColorStop(0, 'rgba(255, 179, 71, 0.85)');
+  glow.addColorStop(1, 'rgba(255, 179, 71, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(x - 26, y - 298, 52, 52);
+  ctx.fillStyle = P.hudAmber;
+  ctx.save();
+  ctx.translate(x, y - 272);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillRect(-9, -9, 18, 18);
+  ctx.restore();
 }
 
 // The runway: cream marks, amber edge lights, threshold chevrons, "ZERO".

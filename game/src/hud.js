@@ -150,6 +150,15 @@ export function drawHUD(ctx, state, t) {
   bigNum(ctx, String(timeLeft), 1280 - 128, 62, timeLeft <= 15 ? P.hudRed : P.hudCream, 30);
   label(ctx, 'S', 1280 - 84, 62);
 
+  // Objective line: what the points are for (top centre, flying only).
+  if (state.phase === 'flying') {
+    panel(ctx, 400, 14, 480, 34);
+    ctx.fillStyle = P.hudAmber;
+    ctx.font = 'bold 16px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('LAND ON ZERO — PERFECT +1000  •  SAFE +500', 640, 37);
+  }
+
   // Bottom-left: attitude dial + compass.
   drawAttitude(ctx, 62, 720 - 62, 42, pl.pitch, t);
   drawCompass(ctx, 128, 720 - 62, 250, heading);
