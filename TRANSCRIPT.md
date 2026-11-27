@@ -31,4 +31,14 @@ besar 20–25%, warna kontras tunggal, judul 3–4 kata).
 - 07:44 — Screenshot final 4/4, 0 console error, ukuran 46–62 KiB.
   Self-check: jalan offline, kontrol keyboard+mouse, restart R, HUD
   terbaca, runway sebagai objektif, 30 dtk main tanpa error.
-- (lanjut: main.ts, LICENSE, README, owner.json, push, bundle, check, submit)
+- 07:46 — main.ts jalan lokal, dossier 314 KB. Commit bcfc40f.
+- 07:50 — push pertama GAGAL (git minta username, tanpa terminal).
+  Daemon restart di tengah. Push ulang via header Basic PAT: SUKSES —
+  commit bcfc40f2f2e8da7b621c4660dcf176ae16d305d9 di main GitHub.
+- 08:1x — bundle --dry-run: 1 sesi (koordinator, 39 turn, 182 baris),
+  system prompt + AGENTS.md terkumpul; kurang --prompt-file, --mcp none,
+  --provider meta --model muse-spark-1.3, dan --muse-usage.
+- 08:1x — tes landing 11/11 lulus (node test-landing.mjs).
+- SERAH-TERIMA: bundle + check + submit dilakukan parent (top-level agent)
+  karena usage rows subagent baru ada sesudah run selesai dan bundle harus
+  membawa sesi parent. Detail + perintah lengkap di laporan akhir.
