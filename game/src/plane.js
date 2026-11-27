@@ -68,11 +68,15 @@ export function stepPlane(pl, input, dt) {
     pl.vx = 0;
   }
 
-  // Needle bonus: passing a pillar top closely without crashing.
+  // Needle bonus: skimming a pillar top closely from ABOVE. The gear must
+  // pass 4-90 px above the top: below the top is the pillar itself, and
+  // the crash check below would end the run, so a bonus can never be
+  // earned by flying through the rock. (>4 px keeps the gear clear of
+  // the 2 px crash margin.)
   PILLARS.forEach((pillar, i) => {
     if (!pl.needleBonus[i] && Math.abs(pl.x - pillar.x) < 26) {
-      const clearance = pl.y + 26 - pillar.top; // gear to pillar top
-      if (clearance > 0 && clearance < 90) {
+      const clearance = pillar.top - (pl.y + 26); // pillar top to gear
+      if (clearance > 4 && clearance < 90) {
         pl.needleBonus[i] = true;
         ev.needle = i;
       }

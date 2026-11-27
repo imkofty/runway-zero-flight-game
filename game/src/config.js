@@ -47,7 +47,7 @@ export const CONFIG = {
   // Scoring
   SCORE_PERFECT: 1000,
   SCORE_SAFE: 500,
-  SCORE_NEEDLE: 150, // threading a pillar close
+  SCORE_NEEDLE: 150, // skimming a pillar top closely from above
   TIME_BONUS_PER_SEC: 10,
 
   // Palette

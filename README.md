@@ -21,8 +21,9 @@ serve `game/` with any static server.
 - **R** — restart
 
 Land on the runway with the right speed, sink rate and centre offset:
-**PERFECT** (+1000), **SAFE** (+500), **MISS** (0). Thread a pillar close
-for a +150 needle bonus. 90 seconds on the clock; the sun is setting.
+**PERFECT** (+1000), **SAFE** (+500), **MISS** (0). Skim a pillar top
+closely — gear above the rock — for a +150 needle bonus. 90 seconds on
+the clock; the sun is setting.
 
 ## Layout
 
